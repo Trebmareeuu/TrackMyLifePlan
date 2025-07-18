@@ -1,12 +1,15 @@
 <?php
+// Inicia la sesión para poder utilizar variables de sesión.
 session_start();
 
+// Si el usuario ya ha iniciado sesión, redirige al panel de control.
 if (isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit;
 }
 
-include __DIR__ . '/../templates/header.php';
+// Incluye la cabecera de la página.
+include __DIR__ . '/templates/header.php';
 ?>
 
 <div class="container">
@@ -18,4 +21,7 @@ include __DIR__ . '/../templates/header.php';
     </p>
 </div>
 
-<?php include __DIR__ . '/../templates/footer.php'; ?>
+<?php
+// Incluye el pie de página.
+include __DIR__ . '/templates/footer.php';
+?>

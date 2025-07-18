@@ -1,24 +1,33 @@
 <?php
+// Inicia la sesión para poder utilizar variables de sesión.
 session_start();
-require_once __DIR__ . '/../src/includes/db.php';
 
+// Requiere el archivo de conexión a la base de datos.
+require_once __DIR__ . '/src/includes/db.php';
+
+// Inicializa un array para almacenar los errores.
 $errors = [];
 
+// Comprueba si el formulario ha sido enviado.
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Limpia y asigna las variables del formulario.
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
+    // Valida el nombre.
     if (empty($name)) {
         $errors[] = "El nombre es obligatorio.";
     }
 
+    // Valida el correo electrónico.
     if (empty($email)) {
         $errors[] = "El correo electrónico es obligatorio.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "El formato del correo electrónico no es válido.";
     } else {
+        // Comprueba si el correo electrónico ya está registrado.
         $sql = "SELECT id FROM users WHERE email = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$email]);
@@ -27,22 +36,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Valida la contraseña.
     if (empty($password)) {
         $errors[] = "La contraseña es obligatoria.";
     } elseif (strlen($password) < 8) {
         $errors[] = "La contraseña debe tener al menos 8 caracteres.";
     }
 
+    // Comprueba si las contraseñas coinciden.
     if ($password !== $confirm_password) {
         $errors[] = "Las contraseñas no coinciden.";
     }
 
+    // Si no hay errores, procede a registrar al usuario.
     if (empty($errors)) {
+        // Hashea la contraseña para mayor seguridad.
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
+        // Prepara la consulta SQL para insertar al nuevo usuario.
         $sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
         $stmt = $pdo->prepare($sql);
 
+        // Ejecuta la consulta y redirige al usuario al panel de control si tiene éxito.
         if ($stmt->execute([$name, $email, $password_hash])) {
             $_SESSION['user_id'] = $pdo->lastInsertId();
             header("Location: dashboard.php");
@@ -53,7 +68,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-include __DIR__ . '/../templates/header.php';
+// Incluye la cabecera de la página.
+include __DIR__ . '/templates/header.php';
 ?>
 
 <div class="container">
@@ -86,4 +102,7 @@ include __DIR__ . '/../templates/header.php';
     </form>
 </div>
 
-<?php include __DIR__ . '/../templates/footer.php'; ?>
+<?php
+// Incluye el pie de página.
+include __DIR__ . '/templates/footer.php';
+?>
