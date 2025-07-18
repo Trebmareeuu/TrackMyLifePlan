@@ -7,18 +7,39 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="index.php">Inicio</a></li>
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <li><a href="dashboard.php">Panel de Control</a></li>
-                    <li><a href="logout.php">Cerrar Sesión</a></li>
-                <?php else: ?>
-                    <li><a href="login.php">Iniciar Sesión</a></li>
-                    <li><a href="register.php">Registrarse</a></li>
-                <?php endif; ?>
-            </ul>
-        </nav>
-    </header>
-    <main>
+    <div class="page-container">
+        <header>
+            <div class="logo">
+                <a href="index.php">TrackMyLifePlan</a>
+            </div>
+            <nav>
+                <ul>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <li><a href="#">Notificaciones</a></li>
+                        <li>
+                            <div class="user-menu">
+                                <img src="img/default-avatar.png" alt="Avatar" class="avatar">
+                                <div class="dropdown-content">
+                                    <a href="profile.php">Configurar Perfil</a>
+                                    <a href="change-password.php">Cambiar Contraseña</a>
+                                    <a href="logout.php">Cerrar Sesión</a>
+                                </div>
+                            </div>
+                        </li>
+                    <?php else: ?>
+                        <li><a href="index.php">Iniciar Sesión / Registrarse</a></li>
+                    <?php endif; ?>
+                </ul>
+            </nav>
+        </header>
+        <div class="main-content">
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <aside class="sidebar">
+                    <ul>
+                        <li><a href="dashboard.php">Panel Principal</a></li>
+                        <li><a href="habits.php">Registrar Hábitos</a></li>
+                        <li><a href="schedule.php">Ver Horario</a></li>
+                    </ul>
+                </aside>
+            <?php endif; ?>
+            <main>

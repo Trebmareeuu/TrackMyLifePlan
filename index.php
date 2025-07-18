@@ -12,13 +12,13 @@ if (isset($_SESSION['user_id'])) {
 include __DIR__ . '/templates/header.php';
 ?>
 
-<div class="container">
-    <h1>Bienvenido a TrackMyLifePlan</h1>
-    <p>Gestiona tus hábitos y finanzas de forma sencilla y eficaz.</p>
-    <p>
-        <a href="register.php" class="btn">Regístrate ahora</a> o
-        <a href="login.php" class="btn">Inicia Sesión</a>
-    </p>
+<div class="container auth-container">
+    <div id="login-form" class="auth-form">
+        <?php include 'login.php'; ?>
+    </div>
+    <div id="register-form" class="auth-form" style="display: none;">
+        <?php include 'register.php'; ?>
+    </div>
 </div>
 
 <?php

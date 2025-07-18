@@ -1,6 +1,8 @@
 <?php
 // Inicia la sesión para poder utilizar variables de sesión.
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Requiere el archivo de conexión a la base de datos.
 require_once __DIR__ . '/src/includes/db.php';
@@ -9,7 +11,7 @@ require_once __DIR__ . '/src/includes/db.php';
 $errors = [];
 
 // Comprueba si el formulario ha sido enviado.
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['register'])) {
     // Limpia y asigna las variables del formulario.
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
@@ -67,14 +69,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
-
-// Incluye la cabecera de la página.
-include __DIR__ . '/templates/header.php';
 ?>
 
 <div class="container">
     <h2>Registrarse</h2>
-    <form action="register.php" method="post">
+    <form action="index.php" method="post">
+        <input type="hidden" name="register" value="1">
         <?php if (!empty($errors)): ?>
             <div class="errors">
                 <?php foreach ($errors as $error): ?>
@@ -100,9 +100,5 @@ include __DIR__ . '/templates/header.php';
         </div>
         <button type="submit">Registrarse</button>
     </form>
+    <p>¿Ya tienes una cuenta? <a href="#" id="show-login">Inicia Sesión</a></p>
 </div>
-
-<?php
-// Incluye el pie de página.
-include __DIR__ . '/templates/footer.php';
-?>

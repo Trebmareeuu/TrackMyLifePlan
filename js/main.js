@@ -12,10 +12,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Cambio entre formularios de inicio de sesión y registro
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const showRegister = document.getElementById('show-register');
+    const showLogin = document.getElementById('show-login');
+
+    if (showRegister) {
+        showRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+        });
+    }
+
+    if (showLogin) {
+        showLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.style.display = 'none';
+            loginForm.style.display = 'block';
+        });
+    }
+
     // Validación del formulario de registro
-    const registerForm = document.querySelector('form[action="register.php"]');
-    if (registerForm) {
-        registerForm.addEventListener('submit', function(event) {
+    const registerFormEl = document.querySelector('form[action="index.php"] input[name="register"]');
+    if (registerFormEl) {
+        registerFormEl.closest('form').addEventListener('submit', function(event) {
             const password = document.getElementById('password').value;
             const confirm_password = document.getElementById('confirm_password').value;
             const errors = [];
@@ -30,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (errors.length > 0) {
                 event.preventDefault();
-                const errorContainer = document.querySelector('.errors');
+                const errorContainer = this.querySelector('.errors');
                 if (errorContainer) {
                     errorContainer.innerHTML = '';
                     errors.forEach(error => {

@@ -1,6 +1,8 @@
 <?php
 // Inicia la sesión para poder utilizar variables de sesión.
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Requiere el archivo de conexión a la base de datos.
 require_once __DIR__ . '/src/includes/db.php';
@@ -14,7 +16,7 @@ const LOCKOUT_TIME = 900; // 15 minutos
 $errors = [];
 
 // Comprueba si el formulario ha sido enviado.
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
     // Limita la frecuencia de las solicitudes de inicio de sesión.
     if (isset($_SESSION['last_login_attempt']) && (time() - $_SESSION['last_login_attempt'] < 2)) {
         $errors[] = "Por favor, espere un momento antes de volver a intentarlo.";
@@ -101,14 +103,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
-
-// Incluye la cabecera de la página.
-include __DIR__ . '/templates/header.php';
 ?>
 
 <div class="container">
     <h2>Iniciar Sesión</h2>
-    <form action="login.php" method="post">
+    <form action="index.php" method="post">
+        <input type="hidden" name="login" value="1">
         <?php if (!empty($errors)): ?>
             <div class="errors">
                 <?php foreach ($errors as $error): ?>
@@ -130,9 +130,5 @@ include __DIR__ . '/templates/header.php';
         </div>
         <button type="submit">Iniciar Sesión</button>
     </form>
+    <p>¿No tienes una cuenta? <a href="#" id="show-register">Regístrate</a></p>
 </div>
-
-<?php
-// Incluye el pie de página.
-include __DIR__ . '/templates/footer.php';
-?>
