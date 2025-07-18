@@ -18,7 +18,7 @@ $errors = [];
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Limpia y asigna las variables del formulario.
     $habit_name = trim($_POST['habit_name']);
-    $days_of_week = $_POST['days_of_week'];
+    $days_of_week = isset($_POST['days_of_week']) ? $_POST['days_of_week'] : [];
     $time = $_POST['time'];
 
     // Valida el nombre del hábito.
@@ -66,7 +66,7 @@ include __DIR__ . '/templates/header.php';
 
 <div class="container">
     <h2>Registrar Nuevo Hábito</h2>
-    <form action="habits.php" method="post">
+    <form action="habits.php" method="post" class="modern-form">
         <?php if (!empty($errors)): ?>
             <div class="errors">
                 <?php foreach ($errors as $error): ?>
@@ -80,14 +80,14 @@ include __DIR__ . '/templates/header.php';
         </div>
         <div class="form-group">
             <label>Días de la Semana:</label>
-            <div>
-                <input type="checkbox" name="days_of_week[]" value="Lunes" id="day-mon"> <label for="day-mon">Lunes</label>
-                <input type="checkbox" name="days_of_week[]" value="Martes" id="day-tue"> <label for="day-tue">Martes</label>
-                <input type="checkbox" name="days_of_week[]" value="Miércoles" id="day-wed"> <label for="day-wed">Miércoles</label>
-                <input type="checkbox" name="days_of_week[]" value="Jueves" id="day-thu"> <label for="day-thu">Jueves</label>
-                <input type="checkbox" name="days_of_week[]" value="Viernes" id="day-fri"> <label for="day-fri">Viernes</label>
-                <input type="checkbox" name="days_of_week[]" value="Sábado" id="day-sat"> <label for="day-sat">Sábado</label>
-                <input type="checkbox" name="days_of_week[]" value="Domingo" id="day-sun"> <label for="day-sun">Domingo</label>
+            <div class="days-of-week">
+                <input type="checkbox" name="days_of_week[]" value="Lunes" id="day-mon"> <label for="day-mon">L</label>
+                <input type="checkbox" name="days_of_week[]" value="Martes" id="day-tue"> <label for="day-tue">M</label>
+                <input type="checkbox" name="days_of_week[]" value="Miércoles" id="day-wed"> <label for="day-wed">X</label>
+                <input type="checkbox" name="days_of_week[]" value="Jueves" id="day-thu"> <label for="day-thu">J</label>
+                <input type="checkbox" name="days_of_week[]" value="Viernes" id="day-fri"> <label for="day-fri">V</label>
+                <input type="checkbox" name="days_of_week[]" value="Sábado" id="day-sat"> <label for="day-sat">S</label>
+                <input type="checkbox" name="days_of_week[]" value="Domingo" id="day-sun"> <label for="day-sun">D</label>
             </div>
         </div>
         <div class="form-group">
