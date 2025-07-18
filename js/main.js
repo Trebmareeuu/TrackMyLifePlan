@@ -15,22 +15,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cambio entre formularios de inicio de sesión y registro
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
-    const showRegister = document.getElementById('show-register');
-    const showLogin = document.getElementById('show-login');
+    const showLoginBtn = document.getElementById('show-login-btn');
+    const showRegisterBtn = document.getElementById('show-register-btn');
 
-    if (showRegister) {
-        showRegister.addEventListener('click', (e) => {
+    if (showLoginBtn) {
+        showLoginBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            showLoginBtn.classList.add('active');
+            showRegisterBtn.classList.remove('active');
         });
     }
 
-    if (showLogin) {
-        showLogin.addEventListener('click', (e) => {
+    if (showRegisterBtn) {
+        showRegisterBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            registerForm.style.display = 'none';
-            loginForm.style.display = 'block';
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            showRegisterBtn.classList.add('active');
+            showLoginBtn.classList.remove('active');
         });
     }
 

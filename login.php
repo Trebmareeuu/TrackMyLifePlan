@@ -130,5 +130,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
         </div>
         <button type="submit">Iniciar Sesión</button>
     </form>
-    <p>¿No tienes una cuenta? <a href="#" id="show-register">Regístrate</a></p>
 </div>
