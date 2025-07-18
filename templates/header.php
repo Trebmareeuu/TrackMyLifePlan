@@ -18,7 +18,13 @@
                         <li><a href="#">Notificaciones</a></li>
                         <li>
                             <div class="user-menu">
-                                <img src="img/default-avatar.png" alt="Avatar" class="avatar">
+                                <?php
+                                $avatar_path = 'img/default-avatar.png';
+                                if (isset($_SESSION['user_avatar']) && !empty($_SESSION['user_avatar'])) {
+                                    $avatar_path = 'img/avatars/' . $_SESSION['user_avatar'];
+                                }
+                                ?>
+                                <img src="<?php echo $avatar_path; ?>" alt="Avatar" class="avatar">
                                 <div class="dropdown-content">
                                     <a href="profile.php">Configurar Perfil</a>
                                     <a href="change-password.php">Cambiar Contraseña</a>

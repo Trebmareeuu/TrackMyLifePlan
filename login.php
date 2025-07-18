@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
             // Si no hay errores, procede a iniciar sesión.
             if (empty($errors)) {
                 // Prepara la consulta SQL para obtener el usuario por su correo electrónico.
-                $sql = "SELECT id, password FROM users WHERE email = ?";
+                $sql = "SELECT id, password, avatar FROM users WHERE email = ?";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([$email]);
                 $user = $stmt->fetch();
@@ -66,8 +66,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute([$ip_address]);
 
-                    // Almacena el ID del usuario en la sesión.
+                    // Almacena el ID y el avatar del usuario en la sesión.
                     $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_avatar'] = $user['avatar'];
 
                     // Si el usuario ha marcado "Recordarme", crea una cookie segura.
                     if ($remember) {

@@ -12,10 +12,10 @@ if (!isset($_SESSION['user_id'])) {
 require_once __DIR__ . '/src/includes/db.php';
 
 // Obtiene la información del usuario.
-$sql = "SELECT name, email FROM users WHERE id = ?";
+$sql = "SELECT name, email, avatar FROM users WHERE id = ?";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$_SESSION['user_id']]);
-$user = $stmt->fetch();
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Inicializa un array para almacenar los errores.
 $errors = [];
@@ -48,15 +48,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Procesa la subida del avatar.
+    if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+        $file_extension = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+
+        if (in_array($file_extension, $allowed_extensions)) {
+            if ($_FILES['avatar']['size'] < 5000000) { // 5MB
+                $new_avatar_name = uniqid('avatar_', true) . '.' . $file_extension;
+                $upload_path = 'img/avatars/' . $new_avatar_name;
+
+                if (move_uploaded_file($_FILES['avatar']['tmp_name'], $upload_path)) {
+                    // Elimina el avatar anterior si existe.
+                    if ($user['avatar'] && file_exists('img/avatars/' . $user['avatar'])) {
+                        unlink('img/avatars/' . $user['avatar']);
+                    }
+                    $user['avatar'] = $new_avatar_name;
+                } else {
+                    $errors[] = "Hubo un error al subir el avatar.";
+                }
+            } else {
+                $errors[] = "El archivo es demasiado grande. El tamaño máximo es de 5MB.";
+            }
+        } else {
+            $errors[] = "El formato del archivo no es válido. Solo se permiten JPG, JPEG, PNG y GIF.";
+        }
+    }
+
     // Si no hay errores, procede a actualizar el perfil.
     if (empty($errors)) {
-        $sql = "UPDATE users SET name = ?, email = ? WHERE id = ?";
+        $sql = "UPDATE users SET name = ?, email = ?, avatar = ? WHERE id = ?";
         $stmt = $pdo->prepare($sql);
-        if ($stmt->execute([$name, $email, $_SESSION['user_id']])) {
+        if ($stmt->execute([$name, $email, $user['avatar'], $_SESSION['user_id']])) {
             $success_message = "Perfil actualizado correctamente.";
-            // Actualiza la información del usuario para mostrarla en el formulario.
-            $user['name'] = $name;
-            $user['email'] = $email;
         } else {
             $errors[] = "Hubo un error al actualizar el perfil. Por favor, inténtelo de nuevo.";
         }
@@ -81,7 +105,7 @@ include __DIR__ . '/templates/header.php';
             <p><?php echo $success_message; ?></p>
         </div>
     <?php endif; ?>
-    <form action="profile.php" method="post">
+    <form action="profile.php" method="post" enctype="multipart/form-data">
         <div class="form-group">
             <label for="name">Nombre:</label>
             <input type="text" name="name" id="name" value="<?php echo htmlspecialchars($user['name']); ?>" required>
@@ -89,6 +113,13 @@ include __DIR__ . '/templates/header.php';
         <div class="form-group">
             <label for="email">Correo Electrónico:</label>
             <input type="email" name="email" id="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="avatar">Avatar:</label>
+            <input type="file" name="avatar" id="avatar">
+            <?php if ($user['avatar']): ?>
+                <img src="img/avatars/<?php echo $user['avatar']; ?>" alt="Avatar" class="current-avatar">
+            <?php endif; ?>
         </div>
         <button type="submit">Actualizar Perfil</button>
     </form>
