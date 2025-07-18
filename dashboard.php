@@ -51,6 +51,7 @@ include __DIR__ . '/templates/header.php';
     <h2>Panel de Control</h2>
     <p>Bienvenido, <?php echo htmlspecialchars($user['name']); ?>!</p>
     <p>Aquí podrás ver tus hábitos y finanzas.</p>
+    <a href="habits.php" class="btn">Añadir Nuevo Hábito</a>
 </div>
 
 <?php
