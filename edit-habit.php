@@ -11,6 +11,34 @@ if (!isset($_SESSION['user_id'])) {
 // Requiere el archivo de conexión a la base de datos.
 require_once __DIR__ . '/src/includes/db.php';
 
+// Comprueba si se ha proporcionado un ID de hábito.
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    header("Location: dashboard.php");
+    exit;
+}
+
+$habit_id = $_GET['id'];
+
+// Obtiene la información del hábito.
+$sql = "
+    SELECT h.name, GROUP_CONCAT(hs.day_of_week) as days, hs.start_time, hs.end_time, hs.start_date
+    FROM habits h
+    JOIN habit_schedules hs ON h.id = hs.habit_id
+    WHERE h.id = ? AND h.user_id = ?
+    GROUP BY h.id
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$habit_id, $_SESSION['user_id']]);
+$habit = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Si el hábito no existe, redirige al panel de control.
+if (!$habit) {
+    header("Location: dashboard.php");
+    exit;
+}
+
+$selected_days = explode(',', $habit['days']);
+
 // Inicializa un array para almacenar los errores.
 $errors = [];
 
@@ -48,26 +76,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors[] = "La fecha de inicio es obligatoria.";
     }
 
-    // Si no hay errores, procede a registrar el hábito.
+    // Si no hay errores, procede a actualizar el hábito.
     if (empty($errors)) {
-        // Inserta el hábito en la tabla `habits`.
-        $sql = "INSERT INTO habits (user_id, name) VALUES (?, ?)";
-        $stmt = $pdo->prepare($sql);
-        if ($stmt->execute([$_SESSION['user_id'], $habit_name])) {
-            $habit_id = $pdo->lastInsertId();
+        try {
+            $pdo->beginTransaction();
 
-            // Inserta los horarios del hábito en la tabla `habit_schedules`.
+            // Desactiva el horario anterior.
+            $sql = "UPDATE habit_schedules SET end_date = ? WHERE habit_id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([date('Y-m-d'), $habit_id]);
+
+            // Actualiza el nombre del hábito.
+            $sql = "UPDATE habits SET name = ? WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$habit_name, $habit_id]);
+
+            // Inserta los nuevos horarios.
             foreach ($days_of_week as $day) {
                 $sql = "INSERT INTO habit_schedules (habit_id, day_of_week, start_time, end_time, start_date) VALUES (?, ?, ?, ?, ?)";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([$habit_id, $day, $start_time, $end_time, $start_date]);
             }
 
-            // Redirige al usuario al panel de control.
+            $pdo->commit();
             header("Location: dashboard.php");
             exit;
-        } else {
-            $errors[] = "Hubo un error al registrar el hábito. Por favor, inténtelo de nuevo.";
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $errors[] = "Hubo un error al actualizar el hábito: " . $e->getMessage();
         }
     }
 }
@@ -77,8 +113,8 @@ include __DIR__ . '/templates/header.php';
 ?>
 
 <div class="container">
-    <h2>Registrar Nuevo Hábito</h2>
-    <form action="habits.php" method="post" class="modern-form">
+    <h2>Editar Hábito</h2>
+    <form action="edit-habit.php?id=<?php echo $habit_id; ?>" method="post" class="modern-form">
         <?php if (!empty($errors)): ?>
             <div class="errors">
                 <?php foreach ($errors as $error): ?>
@@ -88,33 +124,30 @@ include __DIR__ . '/templates/header.php';
         <?php endif; ?>
         <div class="form-group">
             <label for="habit_name">Nombre del Hábito:</label>
-            <input type="text" name="habit_name" id="habit_name" required>
+            <input type="text" name="habit_name" id="habit_name" value="<?php echo htmlspecialchars($habit['name']); ?>" required>
         </div>
         <div class="form-group">
             <label>Días de la Semana:</label>
             <div class="days-of-week">
-                <input type="checkbox" name="days_of_week[]" value="Lunes" id="day-mon"> <label for="day-mon">L</label>
-                <input type="checkbox" name="days_of_week[]" value="Martes" id="day-tue"> <label for="day-tue">M</label>
-                <input type="checkbox" name="days_of_week[]" value="Miércoles" id="day-wed"> <label for="day-wed">X</label>
-                <input type="checkbox" name="days_of_week[]" value="Jueves" id="day-thu"> <label for="day-thu">J</label>
-                <input type="checkbox" name="days_of_week[]" value="Viernes" id="day-fri"> <label for="day-fri">V</label>
-                <input type="checkbox" name="days_of_week[]" value="Sábado" id="day-sat"> <label for="day-sat">S</label>
-                <input type="checkbox" name="days_of_week[]" value="Domingo" id="day-sun"> <label for="day-sun">D</label>
+                <?php foreach (['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as $day): ?>
+                    <input type="checkbox" name="days_of_week[]" value="<?php echo $day; ?>" id="day-<?php echo strtolower(substr($day, 0, 3)); ?>" <?php echo in_array($day, $selected_days) ? 'checked' : ''; ?>>
+                    <label for="day-<?php echo strtolower(substr($day, 0, 3)); ?>"><?php echo substr($day, 0, 1); ?></label>
+                <?php endforeach; ?>
             </div>
         </div>
         <div class="form-group">
             <label for="start_time">Hora de Inicio:</label>
-            <input type="time" name="start_time" id="start_time" required>
+            <input type="time" name="start_time" id="start_time" value="<?php echo $habit['start_time']; ?>" required>
         </div>
         <div class="form-group">
             <label for="end_time">Hora de Fin:</label>
-            <input type="time" name="end_time" id="end_time" required>
+            <input type="time" name="end_time" id="end_time" value="<?php echo $habit['end_time']; ?>" required>
         </div>
         <div class="form-group">
             <label for="start_date">Fecha de Inicio:</label>
-            <input type="date" name="start_date" id="start_date" required>
+            <input type="date" name="start_date" id="start_date" value="<?php echo $habit['start_date']; ?>" required>
         </div>
-        <button type="submit">Registrar Hábito</button>
+        <button type="submit">Actualizar Hábito</button>
     </form>
 </div>
 
