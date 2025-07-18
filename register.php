@@ -83,20 +83,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['register'])) {
             </div>
         <?php endif; ?>
         <div class="form-group">
-            <label for="name">Nombre:</label>
-            <input type="text" name="name" id="name" required>
+            <label for="register_name">Nombre:</label>
+            <input type="text" name="name" id="register_name" required>
         </div>
         <div class="form-group">
-            <label for="email">Correo Electrónico:</label>
-            <input type="email" name="email" id="email" required>
+            <label for="register_email">Correo Electrónico:</label>
+            <input type="email" name="email" id="register_email" required>
         </div>
         <div class="form-group">
-            <label for="password">Contraseña:</label>
-            <input type="password" name="password" id="password" required>
+            <label for="register_password">Contraseña:</label>
+            <input type="password" name="password" id="register_password" required>
         </div>
         <div class="form-group">
-            <label for="confirm_password">Confirmar Contraseña:</label>
-            <input type="password" name="confirm_password" id="confirm_password" required>
+            <label for="register_confirm_password">Confirmar Contraseña:</label>
+            <input type="password" name="confirm_password" id="register_confirm_password" required>
         </div>
         <button type="submit">Registrarse</button>
     </form>

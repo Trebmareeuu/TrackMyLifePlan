@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const registerFormEl = document.querySelector('form[action="index.php"] input[name="register"]');
     if (registerFormEl) {
         registerFormEl.closest('form').addEventListener('submit', function(event) {
-            const password = document.getElementById('password').value;
-            const confirm_password = document.getElementById('confirm_password').value;
+            const password = document.getElementById('register_password').value;
+            const confirm_password = document.getElementById('register_confirm_password').value;
             const errors = [];
 
             if (password.length < 8) {
