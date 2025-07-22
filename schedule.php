@@ -46,13 +46,12 @@ $date = isset($_GET['date']) ? new DateTime($_GET['date']) : new DateTime();
 
 // Construye la consulta SQL base.
 $sql = "
-    SELECT h.id, h.name, hs.id as schedule_id, hs.day_of_week, hs.start_time, hs.end_time, hs.start_date, ht.status
+    SELECT h.id, h.name, hs.id as schedule_id, hs.day_of_week, hs.start_time, hs.end_time, hs.start_date
     FROM habits h
     JOIN habit_schedules hs ON h.id = hs.habit_id
-    LEFT JOIN habit_tracking ht ON hs.id = ht.schedule_id AND ht.tracking_date = ?
     WHERE h.user_id = ?
 ";
-$params = [$date->format('Y-m-d'), $_SESSION['user_id']];
+$params = [$_SESSION['user_id']];
 
 // Añade las condiciones de fecha según la vista.
 switch ($view) {
@@ -77,6 +76,18 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $habits = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Obtiene el estado de seguimiento de los hábitos para la fecha actual.
+$tracking_sql = "
+    SELECT hs.id as schedule_id, ht.status
+    FROM habit_schedules hs
+    JOIN habit_tracking ht ON hs.id = ht.schedule_id
+    WHERE ht.tracking_date = ?
+";
+$tracking_stmt = $pdo->prepare($tracking_sql);
+$tracking_stmt->execute([$date->format('Y-m-d')]);
+$tracking_data = $tracking_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+
 // Organiza los hábitos por día y hora.
 $schedule = [];
 $hours = [];
@@ -93,7 +104,7 @@ foreach ($habits as $habit) {
             'schedule_id' => $habit['schedule_id'],
             'name' => $habit['name'],
             'start_date' => $habit['start_date'],
-            'status' => $habit['status']
+            'status' => $tracking_data[$habit['schedule_id']] ?? null
         ];
     }
 }
@@ -142,10 +153,10 @@ include __DIR__ . '/templates/header.php';
                     <?php
                     $days_to_display = ($view === 'day') ? [$date->format('l')] : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                     foreach ($days_to_display as $day_index => $day):
-                        $current_date = ($view === 'week') ? (clone $start_of_week)->modify("+$day_index days") : $date;
+                        $current_date_str = ($view === 'week') ? (clone $start_of_week)->modify("+$day_index days")->format('Y-m-d') : $date->format('Y-m-d');
                     ?>
                         <td>
-                            <?php if (isset($schedule[$hour][ucfirst($day)]) && $current_date->format('Y-m-d') >= $schedule[$hour][ucfirst($day)]['start_date']):
+                            <?php if (isset($schedule[$hour][ucfirst($day)]) && $current_date_str >= $schedule[$hour][ucfirst($day)]['start_date']):
                                 $habit_data = $schedule[$hour][ucfirst($day)];
                             ?>
                                 <div class="habit-item <?php echo strtolower($habit_data['status']); ?>">
@@ -155,7 +166,7 @@ include __DIR__ . '/templates/header.php';
                                         <form action="schedule.php?<?php echo http_build_query($_GET); ?>" method="post">
                                             <input type="hidden" name="track_habit" value="1">
                                             <input type="hidden" name="schedule_id" value="<?php echo $habit_data['schedule_id']; ?>">
-                                            <input type="hidden" name="tracking_date" value="<?php echo $current_date->format('Y-m-d'); ?>">
+                                            <input type="hidden" name="tracking_date" value="<?php echo $current_date_str; ?>">
                                             <?php if ($habit_data['status'] !== 'Realizado'): ?>
                                                 <button type="submit" name="status" value="Realizado" class="track-btn complete-btn">✓</button>
                                             <?php endif; ?>
