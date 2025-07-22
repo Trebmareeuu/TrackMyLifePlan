@@ -56,16 +56,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (in_array($file_extension, $allowed_extensions)) {
             if ($_FILES['avatar']['size'] < 5000000) { // 5MB
                 $new_avatar_name = uniqid('avatar_', true) . '.' . $file_extension;
-                $upload_path = 'img/avatars/' . $new_avatar_name;
+                $upload_path = __DIR__ . '/img/avatars/' . $new_avatar_name;
 
                 if (move_uploaded_file($_FILES['avatar']['tmp_name'], $upload_path)) {
                     // Elimina el avatar anterior si existe.
-                    if ($user['avatar'] && file_exists('img/avatars/' . $user['avatar'])) {
-                        unlink('img/avatars/' . $user['avatar']);
+                    if ($user['avatar'] && file_exists(__DIR__ . '/img/avatars/' . $user['avatar'])) {
+                        unlink(__DIR__ . '/img/avatars/' . $user['avatar']);
                     }
                     $user['avatar'] = $new_avatar_name;
                 } else {
-                    $errors[] = "Hubo un error al subir el avatar.";
+                    $errors[] = "Hubo un error al subir el avatar. Asegúrese de que el directorio 'img/avatars' tiene permisos de escritura.";
                 }
             } else {
                 $errors[] = "El archivo es demasiado grande. El tamaño máximo es de 5MB.";
@@ -80,6 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql = "UPDATE users SET name = ?, email = ?, avatar = ? WHERE id = ?";
         $stmt = $pdo->prepare($sql);
         if ($stmt->execute([$name, $email, $user['avatar'], $_SESSION['user_id']])) {
+            $_SESSION['user_avatar'] = $user['avatar'];
             $success_message = "Perfil actualizado correctamente.";
         } else {
             $errors[] = "Hubo un error al actualizar el perfil. Por favor, inténtelo de nuevo.";

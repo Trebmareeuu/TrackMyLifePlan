@@ -46,12 +46,13 @@ $date = isset($_GET['date']) ? new DateTime($_GET['date']) : new DateTime();
 
 // Construye la consulta SQL base.
 $sql = "
-    SELECT h.id, h.name, hs.id as schedule_id, hs.day_of_week, hs.start_time, hs.end_time
+    SELECT h.id, h.name, hs.id as schedule_id, hs.day_of_week, hs.start_time, hs.end_time, hs.start_date, ht.status
     FROM habits h
     JOIN habit_schedules hs ON h.id = hs.habit_id
+    LEFT JOIN habit_tracking ht ON hs.id = ht.schedule_id AND ht.tracking_date = ?
     WHERE h.user_id = ?
 ";
-$params = [$_SESSION['user_id']];
+$params = [$date->format('Y-m-d'), $_SESSION['user_id']];
 
 // Añade las condiciones de fecha según la vista.
 switch ($view) {
@@ -90,7 +91,9 @@ foreach ($habits as $habit) {
         $schedule[$time_key][$habit['day_of_week']] = [
             'id' => $habit['id'],
             'schedule_id' => $habit['schedule_id'],
-            'name' => $habit['name']
+            'name' => $habit['name'],
+            'start_date' => $habit['start_date'],
+            'status' => $habit['status']
         ];
     }
 }
@@ -119,17 +122,17 @@ include __DIR__ . '/templates/header.php';
         <thead>
             <tr>
                 <th>Hora</th>
-                <?php if ($view === 'day'): ?>
-                    <th><?php echo $date->format('l'); ?></th>
-                <?php else: ?>
-                    <th>Lunes</th>
-                    <th>Martes</th>
-                    <th>Miércoles</th>
-                    <th>Jueves</th>
-                    <th>Viernes</th>
-                    <th>Sábado</th>
-                    <th>Domingo</th>
-                <?php endif; ?>
+                <?php
+                if ($view === 'day') {
+                    echo '<th>' . $date->format('l') . ' ' . $date->format('d') . '</th>';
+                } else {
+                    $start_of_week_for_header = (clone $date)->modify('monday this week');
+                    for ($i = 0; $i < 7; $i++) {
+                        echo '<th>' . $start_of_week_for_header->format('l') . ' ' . $start_of_week_for_header->format('d') . '</th>';
+                        $start_of_week_for_header->modify('+1 day');
+                    }
+                }
+                ?>
             </tr>
         </thead>
         <tbody>
@@ -137,24 +140,28 @@ include __DIR__ . '/templates/header.php';
                 <tr>
                     <td><?php echo $hour; ?></td>
                     <?php
-                    $days_to_display = ($view === 'day') ? [$date->format('l')] : ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                    $days_to_display = ($view === 'day') ? [$date->format('l')] : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                     foreach ($days_to_display as $day_index => $day):
                         $current_date = ($view === 'week') ? (clone $start_of_week)->modify("+$day_index days") : $date;
                     ?>
                         <td>
-                            <?php if (isset($schedule[$hour][$day])):
-                                $habit_data = $schedule[$hour][$day];
+                            <?php if (isset($schedule[$hour][ucfirst($day)]) && $current_date->format('Y-m-d') >= $schedule[$hour][ucfirst($day)]['start_date']):
+                                $habit_data = $schedule[$hour][ucfirst($day)];
                             ?>
-                                <div class="habit-item">
+                                <div class="habit-item <?php echo strtolower($habit_data['status']); ?>">
                                     <?php echo htmlspecialchars($habit_data['name']); ?>
                                     <a href="edit-habit.php?id=<?php echo $habit_data['id']; ?>" class="edit-btn">Editar</a>
                                     <div class="tracking-buttons">
-                                        <form action="schedule.php?<?php echo $_SERVER['QUERY_STRING']; ?>" method="post">
+                                        <form action="schedule.php?<?php echo http_build_query($_GET); ?>" method="post">
                                             <input type="hidden" name="track_habit" value="1">
                                             <input type="hidden" name="schedule_id" value="<?php echo $habit_data['schedule_id']; ?>">
                                             <input type="hidden" name="tracking_date" value="<?php echo $current_date->format('Y-m-d'); ?>">
-                                            <button type="submit" name="status" value="Realizado" class="track-btn complete-btn">✓</button>
-                                            <button type="submit" name="status" value="No Realizado" class="track-btn incomplete-btn">✗</button>
+                                            <?php if ($habit_data['status'] !== 'Realizado'): ?>
+                                                <button type="submit" name="status" value="Realizado" class="track-btn complete-btn">✓</button>
+                                            <?php endif; ?>
+                                            <?php if ($habit_data['status'] !== 'No Realizado'): ?>
+                                                <button type="submit" name="status" value="No Realizado" class="track-btn incomplete-btn">✗</button>
+                                            <?php endif; ?>
                                         </form>
                                     </div>
                                 </div>

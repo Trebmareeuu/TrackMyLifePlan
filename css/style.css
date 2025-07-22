@@ -392,6 +392,16 @@ footer {
     background-color: var(--danger-color);
 }
 
+.habit-item.realizado {
+    background-color: var(--success-color);
+    border-left: 5px solid #218838;
+}
+
+.habit-item.no-realizado {
+    background-color: var(--danger-color);
+    border-left: 5px solid #c82333;
+}
+
 .current-avatar {
     width: 100px;
     height: 100px;
